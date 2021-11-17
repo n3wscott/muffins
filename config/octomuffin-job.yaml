@@ -1,0 +1,15 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: octomuffin
+spec:
+  template:
+    spec:
+      containers:
+        - name: bake
+          image: ko://github.com/n3wscott/octomuffin
+          env:
+            - name: K_SINK
+              value: http://sockeye.default.svc
+      restartPolicy: Never
+  backoffLimit: 1

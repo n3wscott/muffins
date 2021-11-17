@@ -30,7 +30,7 @@ func main() {
 		client: c,
 	}
 
-	if err := om.Bake(context.Background(), time.Second*60); err != nil {
+	if err := om.Bake(context.Background(), time.Second*15); err != nil {
 		log.Fatalf("failed to start server, %s", err.Error())
 	}
 }
@@ -97,33 +97,36 @@ func (om *OctoMuffin) Bake(ctx context.Context, timeToFirstMuffin time.Duration)
 	ticker := time.NewTicker(timeToFirstMuffin)
 	defer ticker.Stop()
 	for {
+		batch := randomID()
+		// Report Batch Ingredients.
+		for _, i := range ingredients {
+			event := newEvent("com.n3wscott.atlanta.octomuffin.ingredient", batch, &batchIngredient{
+				Amount:    i.Amount,
+				Name:      i.Name,
+				Batch:     batch,
+				Inventory: randomID(),
+			})
+			if result := om.client.Send(ctx, event); cloudevents.IsUndelivered(result) {
+				log.Printf("failed to send cloudevent: %v\n", result.Error())
+			}
+		}
+		for _, cs := range coffeeShops {
+			event := newEvent("com.n3wscott.atlanta.octomuffin.lot", batch, &lot{
+				Name:  "Sent to " + cs,
+				Lot:   randomID(),
+				Batch: batch,
+			})
+			if result := om.client.Send(ctx, event); cloudevents.IsUndelivered(result) {
+				log.Printf("failed to send cloudevent: %v\n", result.Error())
+			}
+		}
+
+		// Wait for a tick.
 		select {
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
-			batch := randomID()
-			// Report Batch Ingredients.
-			for _, i := range ingredients {
-				event := newEvent("com.n3wscott.atlanta.octomuffin.ingredient", batch, &batchIngredient{
-					Amount:    i.Amount,
-					Name:      i.Name,
-					Batch:     batch,
-					Inventory: randomID(),
-				})
-				if result := om.client.Send(ctx, event); cloudevents.IsUndelivered(result) {
-					log.Printf("failed to send cloudevent: %v\n", result.Error())
-				}
-			}
-			for _, cs := range coffeeShops {
-				event := newEvent("com.n3wscott.atlanta.octomuffin.lot", batch, &lot{
-					Name:  "Sent to " + cs,
-					Lot:   randomID(),
-					Batch: batch,
-				})
-				if result := om.client.Send(ctx, event); cloudevents.IsUndelivered(result) {
-					log.Printf("failed to send cloudevent: %v\n", result.Error())
-				}
-			}
+			continue
 		}
 	}
 }

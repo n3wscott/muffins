@@ -1,4 +1,4 @@
-module github.com/n3wscott/muffins
+module github.com/n3wscott/octomuffin
 
 go 1.17
 
