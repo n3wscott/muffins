@@ -43,7 +43,7 @@ kubectl patch configmap -n knative-serving config-domain -p "{\"data\": {\"127.0
 All this to get Sockeye:
 
 ```shell
-kubectl apply -n sockeye -f https://github.com/n3wscott/sockeye/releases/download/v0.7.0/release.yaml
+kubectl apply -f https://github.com/n3wscott/sockeye/releases/download/v0.7.0/release.yaml
 ```
 
 I am going to use ghcr.io for my container registry, we need to export a `KO_DOCKER_REPO`,
